@@ -1,9 +1,14 @@
 from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout
 from PySide6.QtCore import Qt
 
+from src.app_state import AppState
+
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, state: AppState):
         super().__init__()
+        self.state = state
+        self.state.collections_changed.connect(self._refresh_sidebar)
+
         self.setWindowTitle("wiklet")
         self.resize(1280, 720)
 
@@ -35,12 +40,18 @@ class MainWindow(QMainWindow):
         self.sidebar_layout.setSpacing(1)
         self.sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        # Hardcoded fake collections for now
-        collections = ["Characters", "Factions", "Locations", "Techniques", "Languages", "Races", "Groups", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample", "Sample"]
-        for name in collections:
-            btn = QPushButton(name)
-            btn.setFlat(True)
-            self.sidebar_layout.addWidget(btn)
+        self._refresh_sidebar()
 
         scroll.setWidget(inner)
         return scroll
+    
+    def _refresh_sidebar(self):
+        while self.sidebar_layout.count():
+            item = self.sidebar_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        for path in self.state.get_recent_collections():
+            btn = QPushButton(path)
+            btn.setFlat(True)
+            self.sidebar_layout.addWidget(btn)

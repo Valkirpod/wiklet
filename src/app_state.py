@@ -1,9 +1,13 @@
 import json
 from pathlib import Path
 from platformdirs import user_config_dir
+from PySide6.QtCore import QObject, Signal
 
-class AppState:
+class AppState(QObject):
+    collections_changed = Signal()
+
     def __init__(self):
+        super().__init__()
         dir = Path(user_config_dir(appname="wiklet", appauthor=False))
         dir.mkdir(parents=True, exist_ok=True)
         self.file_path = dir / "app_state.json"
@@ -28,10 +32,12 @@ class AppState:
         if path not in self.data["recent_collections"]:
             self.data["recent_collections"].append(path)
             self._save()
+            self.collections_changed.emit()
 
     def remove_collection(self, path: str):
         self.data["recent_collections"].remove(path)
         self._save()
+        self.collections_changed.emit()
     
 
 # test code
