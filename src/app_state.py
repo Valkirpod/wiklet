@@ -38,11 +38,3 @@ class AppState(QObject):
         self.data["recent_collections"].remove(path)
         self._save()
         self.collections_changed.emit()
-    
-
-# test code
-if __name__ == "__main__":
-    state = AppState()
-    print(state.get_recent_collections())
-    state.add_collection("C:/test/characters")
-    print(state.get_recent_collections())
