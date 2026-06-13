@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
             if item.widget():
                 item.widget().deleteLater()
         
-        for path in self.state.get_recent_collections():
-            btn = QPushButton(path)
+        for collection in self.state.collections:
+            btn = QPushButton(collection.name)
             btn.setFlat(True)
             self.sidebar_layout.addWidget(btn)
