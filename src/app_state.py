@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from platformdirs import user_config_dir
 from PySide6.QtCore import QObject, Signal
-from src.collection import Collection
+from src.collection import Collection, InvalidCollection
 
 class AppState(QObject):
     collections_changed = Signal()
@@ -28,7 +28,7 @@ class AppState(QObject):
             try:
                 collections.append(Collection(Path(path)))
             except FileNotFoundError:
-                pass
+                collections.append(InvalidCollection(path))
         return collections
     
     def _save(self):

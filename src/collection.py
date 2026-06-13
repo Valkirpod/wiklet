@@ -6,6 +6,7 @@ class Collection:
         self.path = path
         data = self._load()
         self.name = data.get("name", self.path.stem)
+        self.valid = True
     
     def _load(self):
         #TODO: confirmation to load necessary data and folders if it isn't a collection yet.
@@ -28,3 +29,9 @@ class Collection:
     def _set_name(self, name: str):
         self.name = name
         self._save()
+
+class InvalidCollection:
+    def __init__(self, path: str):
+        self.path = path
+        self.name = path
+        self.valid = False

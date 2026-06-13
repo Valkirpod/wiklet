@@ -54,4 +54,6 @@ class MainWindow(QMainWindow):
         for collection in self.state.collections:
             btn = QPushButton(collection.name)
             btn.setFlat(True)
+            if not collection.valid:
+                btn.setStyleSheet("color: red;")
             self.sidebar_layout.addWidget(btn)
