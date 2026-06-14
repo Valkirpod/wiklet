@@ -28,7 +28,7 @@ class AppState(QObject):
             try:
                 collections.append(Collection(Path(path)))
             except FileNotFoundError:
-                collections.append(InvalidCollection(path))
+                collections.append(InvalidCollection(Path(path)))
         return collections
     
     def _save(self):
@@ -47,6 +47,7 @@ class AppState(QObject):
     def remove_collection(self, path: str):
         self.data["recent_collections"].remove(path)
         self._save()
+        self.collections = [c for c in self.collections if str(c.path) != path]
         self.collections_changed.emit()
     
     @property

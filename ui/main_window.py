@@ -78,7 +78,7 @@ class MainWindow(QMainWindow):
             try:
                 collection = Collection(Path(path))
             except FileNotFoundError:
-                collection = InvalidCollection(path)
+                collection = InvalidCollection(Path(path))
             self.state.add_collection(collection)
     
     def _new_collection(self):

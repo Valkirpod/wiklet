@@ -44,7 +44,7 @@ class Collection:
         self._save()
 
 class InvalidCollection:
-    def __init__(self, path: str):
+    def __init__(self, path: Path):
         self.path = path
-        self.name = path
+        self.name = str(path)
         self.valid = False
