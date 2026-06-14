@@ -39,6 +39,10 @@ class AppState(QObject):
         if path not in self.data["recent_collections"]:
             self.data["recent_collections"].append(path)
             self._save()
+            try:
+                self.collections.append(Collection(Path(path)))
+            except FileNotFoundError:
+                self.collections.append(InvalidCollection(path))
             self.collections_changed.emit()
 
     def remove_collection(self, path: str):

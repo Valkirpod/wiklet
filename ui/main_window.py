@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenuBar, QFileDialog
 from PySide6.QtCore import Qt
 
 from src.app_state import AppState
@@ -11,6 +11,15 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle("wiklet")
         self.resize(1280, 720)
+
+        menu = QMenuBar()
+        file_menu = menu.addMenu("File")
+        open_action = file_menu.addAction("Open Collection")
+        open_action.triggered.connect(self._open_collection)
+        new_action = file_menu.addAction("New Collection")
+        # new_action.triggered.connect(self._new_collection)
+
+        self.setMenuBar(menu)
 
         # QMainWindow cannot have layout itself, need central widget
         central = QWidget()
@@ -57,3 +66,10 @@ class MainWindow(QMainWindow):
             if not collection.valid:
                 btn.setStyleSheet("color: red;")
             self.sidebar_layout.addWidget(btn)
+    
+    # -- File Actions --
+
+    def _open_collection(self):
+        path = QFileDialog.getExistingDirectory(self, "Select Collection Directory")
+        if path:
+            self.state.add_collection(path)
