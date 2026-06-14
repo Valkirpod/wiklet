@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt
 
 from pathlib import Path
 
+from src import collection
 from src.collection import Collection, InvalidCollection
 from src.app_state import AppState
 
@@ -64,11 +65,17 @@ class MainWindow(QMainWindow):
                 item.widget().deleteLater()
         
         for collection in self.state.collections:
-            btn = QPushButton(collection.name)
+            btn = QPushButton()
             btn.setFlat(True)
             if not collection.valid:
                 btn.setStyleSheet("color: red;")
+            
+            # Set a fixed length for the text to ensure it does not scale up the button size.
+            btn.setText(btn.fontMetrics().elidedText(collection.name, Qt.TextElideMode.ElideRight, 190))
+            btn.setToolTip(collection.name)
+
             self.sidebar_layout.addWidget(btn)
+
             btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
             btn.customContextMenuRequested.connect(
                 lambda pos, b=btn, c=collection: self._show_collection_menu(pos, b, c)
