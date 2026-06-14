@@ -44,7 +44,9 @@ class AppState(QObject):
             self.collections.append(collection)
             self.collections_changed.emit()
 
-    def remove_collection(self, path: str):
+    def remove_collection(self, collection: Collection):
+        path = str(Path(collection.path))
+        
         self.data["recent_collections"].remove(path)
         self._save()
         self.collections = [c for c in self.collections if str(c.path) != path]

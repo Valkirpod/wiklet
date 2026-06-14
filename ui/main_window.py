@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenuBar, QInputDialog, QFileDialog
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenuBar, QInputDialog, QFileDialog, QMenu, QMessageBox
 from PySide6.QtCore import Qt
 
 from pathlib import Path
@@ -69,7 +69,11 @@ class MainWindow(QMainWindow):
             if not collection.valid:
                 btn.setStyleSheet("color: red;")
             self.sidebar_layout.addWidget(btn)
-    
+            btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            btn.customContextMenuRequested.connect(
+                lambda pos, b=btn, c=collection: self._show_collection_menu(pos, b, c)
+            )
+
     # -- File Actions --
 
     def _open_collection(self):
@@ -95,3 +99,26 @@ class MainWindow(QMainWindow):
         collection_path.mkdir(exist_ok=True)
         collection = Collection.create(collection_path, name.strip())
         self.state.add_collection(collection)
+    
+    def _show_collection_menu(self, pos, btn, collection):
+        menu = QMenu(self)
+        menu.addAction("Remove", lambda: self._confirm_remove(collection))
+        menu.exec(btn.mapToGlobal(pos))
+    
+    def _confirm_remove(self, collection):
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Remove Collection")
+        dialog.setText(f"Remove '{collection.name}'?")
+        
+        remove_btn = dialog.addButton("Remove from list", QMessageBox.ButtonRole.DestructiveRole)
+        delete_btn = dialog.addButton("Delete directory", QMessageBox.ButtonRole.DestructiveRole)
+        dialog.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+        
+        dialog.exec()
+        
+        clicked = dialog.clickedButton()
+        if clicked == remove_btn:
+            self.state.remove_collection(collection)
+        elif clicked == delete_btn:
+            pass
+            # TODO: delete the folder from disk
