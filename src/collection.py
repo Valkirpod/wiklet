@@ -18,6 +18,19 @@ class Collection:
                 return json.load(f)
         
         raise FileNotFoundError(f"{collection_path} is not a valid collection.")
+
+    @classmethod
+    def create(cls, path: Path, name: str):
+        folder_name = name.lower().replace(" ", "-")
+
+        (path / folder_name).mkdir(exist_ok=True)
+        collection_json = path / folder_name / "collection.json"
+        data = {"name": name}
+
+        with open(collection_json, "w") as f:
+            json.dump(data, f, indent=2)
+        
+        return cls(path / folder_name)
     
     def _save(self):
         data = {

@@ -35,17 +35,22 @@ class AppState(QObject):
         with open(self.file_path, "w") as f:
             json.dump(self.data, f, indent=2)
 
-    def add_collection(self, path: str):
+    def add_collection(self, collection: Collection):
+        path = str(Path(collection.path))
+
         if path not in self.data["recent_collections"]:
             self.data["recent_collections"].append(path)
             self._save()
-            try:
-                self.collections.append(Collection(Path(path)))
-            except FileNotFoundError:
-                self.collections.append(InvalidCollection(path))
+            self.collections.append(collection)
             self.collections_changed.emit()
 
     def remove_collection(self, path: str):
         self.data["recent_collections"].remove(path)
         self._save()
         self.collections_changed.emit()
+    
+    @property
+    def default_collections_dir(self) -> Path:
+        default = Path(user_config_dir(appname="wiklet", appauthor=False)) / "collections"
+        default.mkdir(parents=True, exist_ok=True)
+        return default

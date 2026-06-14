@@ -1,6 +1,9 @@
-from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenuBar, QFileDialog
+from PySide6.QtWidgets import QMainWindow, QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenuBar, QInputDialog, QFileDialog
 from PySide6.QtCore import Qt
 
+from pathlib import Path
+
+from src.collection import Collection, InvalidCollection
 from src.app_state import AppState
 
 class MainWindow(QMainWindow):
@@ -17,7 +20,7 @@ class MainWindow(QMainWindow):
         open_action = file_menu.addAction("Open Collection")
         open_action.triggered.connect(self._open_collection)
         new_action = file_menu.addAction("New Collection")
-        # new_action.triggered.connect(self._new_collection)
+        new_action.triggered.connect(self._new_collection)
 
         self.setMenuBar(menu)
 
@@ -72,4 +75,23 @@ class MainWindow(QMainWindow):
     def _open_collection(self):
         path = QFileDialog.getExistingDirectory(self, "Select Collection Directory")
         if path:
-            self.state.add_collection(path)
+            try:
+                collection = Collection(Path(path))
+            except FileNotFoundError:
+                collection = InvalidCollection(path)
+            self.state.add_collection(collection)
+    
+    def _new_collection(self):
+        default_dir = self.state.default_collections_dir
+        path = QFileDialog.getExistingDirectory(self, "Choose save location", str(default_dir))
+        if not path:
+            return
+        
+        name, ok = QInputDialog.getText(self, "New Collection", "Collection name:")
+        if not ok or not name.strip():
+            return
+        
+        collection_path = Path(path) / name.strip()
+        collection_path.mkdir(exist_ok=True)
+        collection = Collection.create(collection_path, name.strip())
+        self.state.add_collection(collection)
