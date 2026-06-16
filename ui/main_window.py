@@ -35,15 +35,28 @@ class MainWindow(QMainWindow):
         layout.setSpacing(0)
         
         self.sidebar = self._build_sidebar()
-        layout.addWidget(self.sidebar)
+        layout.addWidget(self.sidebar, 1)
+
+        self.sidebar_visible = True
+        self.toggle_btn = QPushButton("<")
+        self.toggle_btn.setFixedWidth(32)
+        self.toggle_btn.setFixedHeight(64)
+        self.toggle_btn.clicked.connect(self._toggle_sidebar)
+        layout.addWidget(self.toggle_btn, 0)
+
+        entrybar = QScrollArea()
+        entrybar.setMinimumWidth(220)
+        entrybar.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        entrybar.setWidgetResizable(True)
+        layout.addWidget(entrybar, 1)
 
         self.content = QFrame()
         self.content.setFrameShape(QFrame.Shape.StyledPanel)
-        layout.addWidget(self.content)
+        layout.addWidget(self.content, 5)
 
     def _build_sidebar(self):
         scroll = QScrollArea()
-        scroll.setFixedWidth(220)
+        scroll.setMinimumWidth(220)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         scroll.setWidgetResizable(True)
 
@@ -80,6 +93,15 @@ class MainWindow(QMainWindow):
             btn.customContextMenuRequested.connect(
                 lambda pos, b=btn, c=collection: self._show_collection_menu(pos, b, c)
             )
+    
+    def _toggle_sidebar(self):
+        if self.sidebar_visible:
+            self.sidebar.hide()
+            self.toggle_btn.setText(">")
+        else:
+            self.sidebar.show()
+            self.toggle_btn.setText("<")
+        self.sidebar_visible = not self.sidebar_visible
 
     # -- File Actions --
 
