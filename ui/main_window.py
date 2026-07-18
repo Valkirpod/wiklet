@@ -5,6 +5,8 @@ from pathlib import Path
 
 from src.app_state import AppState
 from src.project_manager import ProjectManager
+
+from ui.welcome_view import WelcomeView
 from ui.project_view import ProjectView
 
 from PySide6.QtGui import QDesktopServices
@@ -38,7 +40,15 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         open_action = file_menu.addAction("Open Default Projects Directory")
         open_action.triggered.connect(self._open_default_projects_directory)
+
+        self._show_welcome()
     
+    def _show_welcome(self):
+        view = WelcomeView(self)
+        view.new_project_requested.connect(self._new_project)
+        view.open_project_requested.connect(self._open_project)
+        self.setCentralWidget(view)
+
     def _show_project(self):
         view = ProjectView(self.project)
         self.setCentralWidget(view)
