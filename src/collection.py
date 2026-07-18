@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+import re
 
 class Collection:
     def __init__(self, path: Path):
@@ -22,6 +23,7 @@ class Collection:
     @classmethod
     def create(cls, path: Path, name: str):
         folder_name = name.lower().replace(" ", "-")
+        folder_name = re.sub(r'[<>:"/\\|?*]', '', folder_name)
 
         (path / folder_name).mkdir(exist_ok=True)
         collection_json = path / folder_name / "collection.json"
