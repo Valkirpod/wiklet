@@ -21,6 +21,8 @@ class MainWindow(QMainWindow):
         menu = QMenuBar()
         self.setMenuBar(menu)
 
+        # project
+
         file_menu = menu.addMenu("Project")
         new_action = file_menu.addAction("New Project")
         new_action.triggered.connect(self._new_project)
@@ -41,6 +43,14 @@ class MainWindow(QMainWindow):
         open_action = file_menu.addAction("Open Default Projects Directory")
         open_action.triggered.connect(self._open_default_projects_directory)
 
+        # collection
+
+        self.edit_menu = menu.addMenu("Edit")
+        self.edit_menu.setEnabled(False)
+        self.edit_menu.addAction("New Collection", lambda: self.centralWidget()._new_collection() if isinstance(self.centralWidget(), ProjectView) else None)
+
+        # 
+
         self._show_welcome()
     
     def _show_welcome(self):
@@ -50,6 +60,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(view)
 
     def _show_project(self):
+        self.edit_menu.setEnabled(True)
+
         view = ProjectView(self.project)
         self.setCentralWidget(view)
     
