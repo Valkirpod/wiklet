@@ -6,7 +6,9 @@ def main():
     app = QApplication(sys.argv)
 
     window = MainWindow()
+    window.setWindowTitle("wiklet")
     window.show()
+    window.showMaximized()
     
     sys.exit(app.exec())
 

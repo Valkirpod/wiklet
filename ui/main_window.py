@@ -17,9 +17,6 @@ class MainWindow(QMainWindow):
         self.project = ProjectManager()
         self.project.collections_changed.connect(self._refresh_sidebar)
 
-        self.setWindowTitle("wiklet")
-        self.showMaximized()
-
         menu = QMenuBar()
         self.setMenuBar(menu)
 
