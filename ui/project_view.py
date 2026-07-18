@@ -2,7 +2,8 @@ from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame, QPushButton, QScroll
 from PySide6.QtCore import Qt
 from pathlib import Path
 from src.project_manager import ProjectManager
-from src.collection import Collection, InvalidCollection
+from src.collection import Collection
+import shutil
 
 class ProjectView(QWidget):
     def __init__(self, project: ProjectManager, parent=None):
@@ -97,13 +98,11 @@ class ProjectView(QWidget):
     def _confirm_remove(self, collection):
         dialog = QMessageBox(self)
         dialog.setWindowTitle("Remove Collection")
-        dialog.setText(f"Remove '{collection.name}'?")
-        remove_btn = dialog.addButton("Remove from list", QMessageBox.ButtonRole.DestructiveRole)
-        delete_btn = dialog.addButton("Delete directory", QMessageBox.ButtonRole.DestructiveRole)
+        dialog.setText(f"Delete '{collection.name}'? This cannot be undone.")
+        delete_btn = dialog.addButton("Delete", QMessageBox.ButtonRole.DestructiveRole)
         dialog.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
         dialog.exec()
         clicked = dialog.clickedButton()
-        if clicked == remove_btn:
+        if clicked == delete_btn:
+            shutil.rmtree(collection.path, ignore_errors=True)
             self.project.remove_collection(collection)
-        elif clicked == delete_btn:
-            pass  # TODO: delete folder from disk

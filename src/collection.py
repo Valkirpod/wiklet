@@ -10,8 +10,6 @@ class Collection:
         self.valid = True
     
     def _load(self):
-        #TODO: confirmation to load necessary data and folders if it isn't a collection yet.
-
         collection_path = self.path / "collection.json"
 
         if collection_path.exists():
@@ -48,5 +46,5 @@ class Collection:
 class InvalidCollection:
     def __init__(self, path: Path):
         self.path = path
-        self.name = str(path)
+        self.name = path.name
         self.valid = False
