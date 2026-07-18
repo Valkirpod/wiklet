@@ -1,13 +1,11 @@
 import sys
 from PySide6.QtWidgets import QApplication
 from ui.main_window import MainWindow
-from src.app_state import AppState
 
 def main():
     app = QApplication(sys.argv)
-    
-    state = AppState()
-    window = MainWindow(state)
+
+    window = MainWindow()
     window.show()
     
     sys.exit(app.exec())
