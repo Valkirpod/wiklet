@@ -3,10 +3,9 @@ from PySide6.QtCore import Qt, QUrl
 
 from pathlib import Path
 
-from src import collection
-from src.collection import Collection, InvalidCollection
 from src.app_state import AppState
 from src.project_manager import ProjectManager
+from ui.project_view import ProjectView
 
 from PySide6.QtGui import QDesktopServices
 
@@ -15,7 +14,7 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.app_state = AppState()
         self.project = ProjectManager()
-        self.project.collections_changed.connect(self._refresh_sidebar)
+        self.project.collections_changed.connect(self._on_collections_changed)
 
         menu = QMenuBar()
         self.setMenuBar(menu)
@@ -39,36 +38,14 @@ class MainWindow(QMainWindow):
         file_menu.addSeparator()
         open_action = file_menu.addAction("Open Default Projects Directory")
         open_action.triggered.connect(self._open_default_projects_directory)
-
-        # QMainWindow cannot have layout itself, need central widget
-        central = QWidget()
-        self.setCentralWidget(central)
-        
-        # horizontal layout, non fixed sizes will take up remaining space
-        layout = QHBoxLayout(central)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        
-        self.sidebar = self._build_sidebar()
-        layout.addWidget(self.sidebar, 1)
-
-        self.sidebar_visible = True
-        self.toggle_btn = QPushButton("<")
-        self.toggle_btn.setFixedWidth(32)
-        self.toggle_btn.setFixedHeight(64)
-        self.toggle_btn.clicked.connect(self._toggle_sidebar)
-        layout.addWidget(self.toggle_btn, 0)
-
-        entrybar = QScrollArea()
-        entrybar.setMinimumWidth(220)
-        entrybar.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        entrybar.setWidgetResizable(True)
-        layout.addWidget(entrybar, 1)
-
-        self.content = QFrame()
-        self.content.setFrameShape(QFrame.Shape.StyledPanel)
-        layout.addWidget(self.content, 5)
-
+    
+    def _show_project(self):
+        view = ProjectView(self.project)
+        self.setCentralWidget(view)
+    
+    def _on_collections_changed(self):
+        if isinstance(self.centralWidget(), ProjectView) and self.project.is_open:
+            self.centralWidget()._refresh_sidebar()
     
     def _new_project(self):
         parent_folder = QFileDialog.getExistingDirectory(
@@ -86,7 +63,9 @@ class MainWindow(QMainWindow):
 
         self.project.create_new(str(project_folder), name)
         self.app_state.add_recent_project(str(project_folder))
-        self.setWindowTitle(f"iron editor - {name}")
+        self.setWindowTitle(f"wiklet - {name}")
+
+        self._show_project()
     
     def _open_project(self):
         folder = QFileDialog.getExistingDirectory(
@@ -97,7 +76,8 @@ class MainWindow(QMainWindow):
             return
         try:
             self.project.open(folder)
-            self.setWindowTitle(f"iron editor - {self.project.project_name}")
+            self.setWindowTitle(f"wiklet - {self.project.project_name}")
+            self._show_project()
         except FileNotFoundError as e:
             QMessageBox.critical(self, "Error", str(e))
     
@@ -117,7 +97,8 @@ class MainWindow(QMainWindow):
         try:
             self.project.open(path)
             self.app_state.add_recent_project(path)
-            self.setWindowTitle(f"iron editor - {self.project.project_name}")
+            self.setWindowTitle(f"wiklet - {self.project.project_name}")
+            self._show_project()
         except FileNotFoundError:
             result = QMessageBox.question(
                 self,
@@ -153,107 +134,8 @@ class MainWindow(QMainWindow):
 
         self.project.save_as(str(project_folder), name)
         self.app_state.add_recent_project(str(project_folder))
-        self.setWindowTitle(f"iron editor - {name}")
+        self.setWindowTitle(f"wiklet - {name}")
         
     def _open_default_projects_directory(self):
         path = self.app_state.default_projects_dir
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
-
-    def _build_sidebar(self):
-        scroll = QScrollArea()
-        scroll.setMinimumWidth(220)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setWidgetResizable(True)
-
-        inner = QWidget()
-        self.sidebar_layout = QVBoxLayout(inner)
-        self.sidebar_layout.setContentsMargins(4, 4, 4, 4)
-        self.sidebar_layout.setSpacing(1)
-        self.sidebar_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-
-        self._refresh_sidebar()
-
-        scroll.setWidget(inner)
-        return scroll
-    
-    def _refresh_sidebar(self):
-        pass
-        while self.sidebar_layout.count():
-            item = self.sidebar_layout.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
-        
-        for collection in self.project.collections:
-            btn = QPushButton()
-            btn.setFlat(True)
-            if not collection.valid:
-                btn.setStyleSheet("color: red;")
-            
-            # Set a fixed length for the text to ensure it does not scale up the button size.
-            btn.setText(btn.fontMetrics().elidedText(collection.name, Qt.TextElideMode.ElideRight, 190))
-            btn.setToolTip(collection.name)
-
-            self.sidebar_layout.addWidget(btn)
-
-            btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-            btn.customContextMenuRequested.connect(
-                lambda pos, b=btn, c=collection: self._show_collection_menu(pos, b, c)
-            )
-    
-    def _toggle_sidebar(self):
-        if self.sidebar_visible:
-            self.sidebar.hide()
-            self.toggle_btn.setText(">")
-        else:
-            self.sidebar.show()
-            self.toggle_btn.setText("<")
-        self.sidebar_visible = not self.sidebar_visible
-
-    # -- File Actions --
-
-    def _open_collection(self):
-        path = QFileDialog.getExistingDirectory(self, "Select Collection Directory")
-        if path:
-            try:
-                collection = Collection(Path(path))
-            except FileNotFoundError:
-                collection = InvalidCollection(Path(path))
-            self.app_state.add_collection(collection)
-    
-    def _new_collection(self):
-        default_dir = self.app_state.default_collections_dir
-        path = QFileDialog.getExistingDirectory(self, "Choose save location", str(default_dir))
-        if not path:
-            return
-        
-        name, ok = QInputDialog.getText(self, "New Collection", "Collection name:")
-        if not ok or not name.strip():
-            return
-        
-        collection_path = Path(path) / name.strip()
-        collection_path.mkdir(exist_ok=True)
-        collection = Collection.create(collection_path, name.strip())
-        self.app_state.add_collection(collection)
-    
-    def _show_collection_menu(self, pos, btn, collection):
-        menu = QMenu(self)
-        menu.addAction("Remove", lambda: self._confirm_remove(collection))
-        menu.exec(btn.mapToGlobal(pos))
-    
-    def _confirm_remove(self, collection):
-        dialog = QMessageBox(self)
-        dialog.setWindowTitle("Remove Collection")
-        dialog.setText(f"Remove '{collection.name}'?")
-        
-        remove_btn = dialog.addButton("Remove from list", QMessageBox.ButtonRole.DestructiveRole)
-        delete_btn = dialog.addButton("Delete directory", QMessageBox.ButtonRole.DestructiveRole)
-        dialog.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
-        
-        dialog.exec()
-        
-        clicked = dialog.clickedButton()
-        if clicked == remove_btn:
-            self.app_state.remove_collection(collection)
-        elif clicked == delete_btn:
-            pass
-            # TODO: delete the folder from disk

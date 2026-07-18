@@ -3,6 +3,7 @@ import os
 import shutil
 from PySide6.QtCore import QObject, Signal
 from src.collection import Collection, InvalidCollection
+from pathlib import Path
 
 class ProjectManager(QObject):
     collections_changed = Signal()
@@ -48,7 +49,7 @@ class ProjectManager(QObject):
     
     def _scan_collections(self):
         collections = []
-        for folder in self.path.iterdir():
+        for folder in Path(self.project_path).iterdir():
             if folder.is_dir():
                 try:
                     collections.append(Collection(folder))
