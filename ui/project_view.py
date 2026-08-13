@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenu, QMessageBox, QFileDialog, QInputDialog
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenu, QMessageBox, QInputDialog, QDockWidget, QMainWindow
 from PySide6.QtCore import Qt
 from pathlib import Path
 from src.project_manager import ProjectManager
@@ -24,15 +24,23 @@ class ProjectView(QWidget):
         self.toggle_btn.clicked.connect(self._toggle_sidebar)
         layout.addWidget(self.toggle_btn, 0)
 
-        self.entrybar = QScrollArea()
-        self.entrybar.setMinimumWidth(220)
-        self.entrybar.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.entrybar.setWidgetResizable(True)
-        layout.addWidget(self.entrybar, 1)
+        # docks
+        
+        self.dock_area = QMainWindow(self)
+        self.dock_area.setWindowFlags(Qt.WindowType.Widget)
 
         self.content = QFrame()
         self.content.setFrameShape(QFrame.Shape.StyledPanel)
-        layout.addWidget(self.content, 5)
+        self.dock_area.setCentralWidget(self.content)
+
+        self.entrybar = QScrollArea()
+        self.entrybar.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
+        self.entry_dock = QDockWidget("Entries", self.dock_area)
+        self.entry_dock.setWidget(self.entrybar)
+        self.dock_area.addDockWidget(Qt.DockWidgetArea.LeftDockWidgetArea, self.entry_dock)
+
+        layout.addWidget(self.dock_area, 6)
 
     def _build_sidebar(self):
         scroll = QScrollArea()
