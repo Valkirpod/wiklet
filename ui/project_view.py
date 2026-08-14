@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QWidget, QHBoxLayout, QFrame, QPushButton, QScrollArea, QVBoxLayout, QMenu, QMessageBox, QInputDialog, QDockWidget, QMainWindow
+from PySide6.QtWidgets import QWidget, QHBoxLayout, QTextEdit, QPushButton, QScrollArea, QVBoxLayout, QMenu, QMessageBox, QInputDialog, QDockWidget, QMainWindow
 from PySide6.QtCore import Qt
 from pathlib import Path
 from src.project_manager import ProjectManager
@@ -29,8 +29,8 @@ class ProjectView(QWidget):
         self.dock_area = QMainWindow(self)
         self.dock_area.setWindowFlags(Qt.WindowType.Widget)
 
-        self.content = QFrame()
-        self.content.setFrameShape(QFrame.Shape.StyledPanel)
+        self.content = QTextEdit()
+        self.content.setFrameShape(QTextEdit.Shape.StyledPanel)
         self.dock_area.setCentralWidget(self.content)
 
         self.entrybar = QScrollArea()
@@ -78,6 +78,7 @@ class ProjectView(QWidget):
             btn.customContextMenuRequested.connect(
                 lambda pos, b=btn, c=collection: self._show_collection_menu(pos, b, c)
             )
+            btn.clicked.connect(lambda checked=False, c=collection: self._on_collection_selected(c))
 
     def _toggle_sidebar(self):
         if self.sidebar_visible:
@@ -114,3 +115,6 @@ class ProjectView(QWidget):
         if clicked == delete_btn:
             shutil.rmtree(collection.path, ignore_errors=True)
             self.project.remove_collection(collection)
+
+    def _on_collection_selected(self, collection):
+        self.content.setMarkdown(collection.content)

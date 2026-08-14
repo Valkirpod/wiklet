@@ -7,6 +7,7 @@ class Collection:
         self.path = path
         data = self._load()
         self.name = data.get("name", self.path.stem)
+        self.content = data.get("content", "")
         self.valid = True
     
     def _load(self):
@@ -25,7 +26,7 @@ class Collection:
 
         (path / folder_name).mkdir(exist_ok=True)
         collection_json = path / folder_name / "collection.json"
-        data = {"name": name}
+        data = {"name": name, "content": "# Hello World!"}
 
         with open(collection_json, "w") as f:
             json.dump(data, f, indent=2)
@@ -34,9 +35,10 @@ class Collection:
     
     def _save(self):
         data = {
-            "name": self.name
+            "name": self.name,
+            "content": self.content
         }
-        with open(self.collection_path, "w") as f:
+        with open(self.path / "collection.json", "w") as f:
             json.dump(data, f, indent=2)
 
     def _set_name(self, name: str):
@@ -47,4 +49,5 @@ class InvalidCollection:
     def __init__(self, path: Path):
         self.path = path
         self.name = path.name
+        self.content = f"The collection '{self.name}' is invalid."
         self.valid = False
