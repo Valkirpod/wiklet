@@ -80,10 +80,7 @@ class MainWindow(QMainWindow):
         if not ok or not name:
             return
 
-        folder_name = name.lower().replace(" ", "_")
-        project_folder = Path(parent_folder) / folder_name
-
-        self.project.create_new(str(project_folder), name)
+        project_folder = self.project.create_new(Path(parent_folder), name)
         self.app_state.add_recent_project(str(project_folder))
         self.setWindowTitle(f"wiklet - {name}")
 
@@ -154,7 +151,7 @@ class MainWindow(QMainWindow):
         folder_name = name.lower().replace(" ", "_")
         project_folder = Path(parent_folder) / folder_name
 
-        self.project.save_as(str(project_folder), name)
+        self.project.save_as(Path(project_folder), name)
         self.app_state.add_recent_project(str(project_folder))
         self.setWindowTitle(f"wiklet - {name}")
         

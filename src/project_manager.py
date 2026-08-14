@@ -5,6 +5,8 @@ from PySide6.QtCore import QObject, Signal
 from src.collection import Collection, InvalidCollection
 from pathlib import Path
 
+from src.slugify import unique_slug
+
 class ProjectManager(QObject):
     collections_changed = Signal()
 
@@ -18,13 +20,18 @@ class ProjectManager(QObject):
     def is_open(self):
         return self.project_path is not None
 
-    def create_new(self, folder_path, project_name):
+    def create_new(self, parent_path, project_name):
+        folder_name = unique_slug(project_name, parent_path)
+        folder_path = parent_path / folder_name
+
         os.makedirs(folder_path, exist_ok=True)
-        self.project_path = folder_path
+        self.project_path = str(folder_path)
         self.project_name = project_name
         self._write_project_meta()
         self.collections = []
         self.collections_changed.emit()
+
+        return folder_path
 
     def open(self, folder_path):
         meta_path = os.path.join(folder_path, "wikletproject.json")

@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import re
 
+from src.slugify import unique_slug
+
 class Collection:
     def __init__(self, path: Path):
         self.path = path
@@ -21,8 +23,7 @@ class Collection:
 
     @classmethod
     def create(cls, path: Path, name: str):
-        folder_name = name.lower().replace(" ", "-")
-        folder_name = re.sub(r'[<>:"/\\|?*]', '', folder_name)
+        folder_name = unique_slug(name, path)
 
         (path / folder_name).mkdir(exist_ok=True)
         collection_json = path / folder_name / "collection.json"
