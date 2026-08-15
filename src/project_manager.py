@@ -66,15 +66,23 @@ class ProjectManager(QObject):
 
     def save(self):
         self._write_project_meta()
-    
+
     def save_as(self, new_folder_path, new_project_name):
         if not self.is_open:
             raise RuntimeError("No project is currently open to save.")
 
-        old_path = self.project_path  # capture before it gets overwritten
+        old_path = Path(self.project_path)
 
-        self.create_new(new_folder_path, new_project_name)
-        shutil.copytree(old_path, new_folder_path, dirs_exist_ok=True)
+        folder_name = unique_slug(new_project_name, new_folder_path)
+        new_project_path = new_folder_path / folder_name
+
+        shutil.copytree(old_path, new_project_path)
+
+        self.project_path = str(new_project_path)
+        self.project_name = new_project_name
+        self._write_project_meta()
+
+        return new_project_path
 
     def _write_project_meta(self):
         with open(self._path("wikletproject.json"), "w") as f:
