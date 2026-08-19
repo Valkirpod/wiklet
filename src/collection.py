@@ -1,8 +1,8 @@
 import json
 from pathlib import Path
-import re
 
 from src.slugify import unique_slug
+from src.entry import Entry
 
 class Collection:
     def __init__(self, path: Path):
@@ -10,7 +10,10 @@ class Collection:
         data = self._load()
         self.name = data.get("name", self.path.stem)
         self.content = data.get("content", "")
+        self.entries = []
         self.valid = True
+
+        self._load_entries()
     
     def _load(self):
         collection_path = self.path / "collection.json"
@@ -45,6 +48,22 @@ class Collection:
     def _set_name(self, name: str):
         self.name = name
         self._save()
+
+    def _load_entries(self):
+        self.entries = []
+        entries_dir = self.path / "entries"
+
+        if not entries_dir.exists():
+            return
+
+        for file in entries_dir.glob("*.json"):
+            try:
+                self.entries.append(Entry(file))
+            except Exception:
+                pass
+
+    def add_entry(self, entry):
+        self.entries.append(entry)
 
 class InvalidCollection:
     def __init__(self, path: Path):

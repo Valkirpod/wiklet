@@ -3,12 +3,14 @@ from PySide6.QtCore import Qt
 from pathlib import Path
 from src.project_manager import ProjectManager
 from src.collection import Collection
+from src.entry import Entry
 import shutil
 
 class ProjectView(QWidget):
     def __init__(self, project: ProjectManager, parent=None):
         super().__init__(parent)
         self.project = project
+        self.current_collection = None
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -35,6 +37,7 @@ class ProjectView(QWidget):
 
         self.entrybar = QScrollArea()
         self.entrybar.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._build_entrybar()  
 
         self.entry_dock = QDockWidget("Entries", self.dock_area)
         self.entry_dock.setWidget(self.entrybar)
@@ -88,6 +91,42 @@ class ProjectView(QWidget):
             self.sidebar.show()
             self.toggle_btn.setText("<")
         self.sidebar_visible = not self.sidebar_visible
+
+    def _build_entrybar(self):
+        container = QWidget()
+        self.entry_layout = QVBoxLayout(container)
+        self.entry_layout.setContentsMargins(4, 4, 4, 4)
+        self.entry_layout.setSpacing(2)
+        self.entry_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self.new_entry_btn = QPushButton("+ New Entry")
+        self.new_entry_btn.clicked.connect(self._new_entry)
+        self.entry_layout.addWidget(self.new_entry_btn)
+
+        self.entrybar.setWidget(container)
+        self.entrybar.setWidgetResizable(True)
+
+        container.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        container.customContextMenuRequested.connect(self._show_entry_menu)
+
+        self._refresh_entrybar()
+
+    def _refresh_entrybar(self):
+        if self.current_collection is None:
+            return
+
+        while self.entry_layout.count() > 1:
+            item = self.entry_layout.takeAt(1)
+            if item.widget():
+                item.widget().deleteLater()
+
+        for entry in self.current_collection.entries:
+            btn = QPushButton()
+            btn.setFlat(True)
+
+            btn.setText(btn.fontMetrics().elidedText(entry.name, Qt.TextElideMode.ElideRight, 190))
+            btn.setToolTip(entry.name)
+            self.entry_layout.addWidget(btn)
     
     # -- Collection Actions --
 
@@ -117,4 +156,27 @@ class ProjectView(QWidget):
             self.project.remove_collection(collection)
 
     def _on_collection_selected(self, collection):
+        self.current_collection = collection
         self.content.setMarkdown(collection.content)
+
+        self._refresh_entrybar()
+        
+    # -- Entry Actions --
+    
+    def _show_entry_menu(self, pos, btn, entry):
+        menu = QMenu(self)
+        menu.addAction("New Entry", self._new_entry)
+        # menu.addAction("Remove", lambda: self._remove_entry(entry))
+        menu.exec(btn.mapToGlobal(pos))
+    
+    def _new_entry(self):
+        if self.current_collection is None:
+            return
+
+        name, ok = QInputDialog.getText(self, "New Entry", "Entry name:")
+        if not ok or not name.strip():
+            return
+        entry = Entry.create(self.current_collection.path, name.strip())
+
+        self.current_collection.add_entry(entry)
+        self._refresh_entrybar()
