@@ -106,9 +106,6 @@ class ProjectView(QWidget):
         self.entrybar.setWidget(container)
         self.entrybar.setWidgetResizable(True)
 
-        container.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        container.customContextMenuRequested.connect(self._show_entry_menu)
-
         self._refresh_entrybar()
 
     def _refresh_entrybar(self):
@@ -127,6 +124,11 @@ class ProjectView(QWidget):
             btn.setText(btn.fontMetrics().elidedText(entry.name, Qt.TextElideMode.ElideRight, 190))
             btn.setToolTip(entry.name)
             self.entry_layout.addWidget(btn)
+
+            btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+            btn.customContextMenuRequested.connect(
+                lambda pos, b=btn, e=entry: self._show_entry_menu(pos, b, e)
+            )
     
     # -- Collection Actions --
 
