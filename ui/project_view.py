@@ -168,7 +168,7 @@ class ProjectView(QWidget):
     def _show_entry_menu(self, pos, btn, entry):
         menu = QMenu(self)
         menu.addAction("New Entry", self._new_entry)
-        # menu.addAction("Remove", lambda: self._remove_entry(entry))
+        menu.addAction("Remove", lambda: self._remove_entry(entry))
         menu.exec(btn.mapToGlobal(pos))
     
     def _new_entry(self):
@@ -182,3 +182,17 @@ class ProjectView(QWidget):
 
         self.current_collection.add_entry(entry)
         self._refresh_entrybar()
+
+    def _remove_entry(self, entry):
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Remove Entry")
+        dialog.setText(f"Delete '{entry.name}'? This cannot be undone.")
+        delete_btn = dialog.addButton("Delete", QMessageBox.ButtonRole.DestructiveRole)
+        dialog.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
+        dialog.exec()
+        clicked = dialog.clickedButton()
+        if clicked == delete_btn:
+            entry.path.unlink(missing_ok=True)
+            print(entry.path)
+            self.current_collection.remove_entry(entry)
+            self._refresh_entrybar()

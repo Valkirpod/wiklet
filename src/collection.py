@@ -65,6 +65,9 @@ class Collection:
     def add_entry(self, entry):
         self.entries.append(entry)
 
+    def remove_entry(self, entry: Entry):
+        self.entries = [e for e in self.entries if str(e.path) != str(entry.path)]
+
 class InvalidCollection:
     def __init__(self, path: Path):
         self.path = path
