@@ -5,9 +5,11 @@ from PySide6.QtGui import QPixmap, QFont, QColor
 class WelcomeView(QWidget):
     new_project_requested = Signal()
     open_project_requested = Signal()
+    recent_project_requested = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, app_state, parent=None):
         super().__init__(parent)
+        self.app_state = app_state
 
         # background
         self.original_pixmap = QPixmap("assets/welcome_bg.jpg")
@@ -53,6 +55,19 @@ class WelcomeView(QWidget):
         btn_row.addWidget(open_btn)
 
         layout.addLayout(btn_row)
+
+        # recents
+        recents = app_state.data.get("recent_projects", [])
+        if recents:
+            recent_label = QLabel("Recent Projects")
+            recent_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(recent_label)
+
+            for path in recents:
+                btn = QPushButton(path)
+                btn.setFlat(True)
+                btn.clicked.connect(lambda checked=False, p=path: self.recent_project_requested.emit(p))
+                layout.addWidget(btn)
 
     def resizeEvent(self, event):
             size = self.width()

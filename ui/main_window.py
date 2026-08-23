@@ -54,9 +54,10 @@ class MainWindow(QMainWindow):
         self._show_welcome()
     
     def _show_welcome(self):
-        view = WelcomeView(self)
+        view = WelcomeView(self.app_state, self)
         view.new_project_requested.connect(self._new_project)
         view.open_project_requested.connect(self._open_project)
+        view.recent_project_requested.connect(self._open_recent_project)
         self.setCentralWidget(view)
 
     def _show_project(self):
